@@ -255,6 +255,7 @@ class Lattice(object):
         return a
 
     def find_glider_pos(self):
+        #this is extremely bad codi
         pos_list = []
         for i in range(self.N):
             for j in range(self.N):
@@ -318,10 +319,11 @@ class Lattice(object):
 
         #loop for required number of sweeps
         for i in range(num_tot_sweeps):
-            self.sweep_list.append(i)
+
             #print(i)
             #if it is time to take a measurement
             if i%1 == 0 and i >= wait_sweeps:
+                self.sweep_list.append(i)
                 #plot animation if required
                 if plot_anim:
                     #print(i)
