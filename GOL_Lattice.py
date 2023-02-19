@@ -9,10 +9,9 @@ import matplotlib.pyplot as plt
 
     
     
-class Lattice(object):
+class GOL_Lattice(object):
     """
-    Class for a Lattice object, which can be manipulated by either Glauber or Kawasaki dynamics after being initialised
-    in a specified state.
+    Class for a Game of Life Lattice object
 
     """
     def __init__(self, N, dynamics = "GOL", lattice = None):

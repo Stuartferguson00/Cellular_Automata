@@ -1,14 +1,15 @@
-import random
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-from Lattice import Lattice
+from GOL_Lattice import GOL_Lattice
 
 
-#L = Lattice(50, lattice = "blinker")
-L = Lattice(50)
+#L = GOL_Lattice(50, lattice = "blinker")
+L = GOL_Lattice(50, lattice = "glider")
+#L = GOL_Lattice(50)
 
-L.run(wait_sweeps = 0, num_tot_sweeps = 1000, plot_anim = True)
+L.run(wait_sweeps = 0, num_tot_sweeps = 10000, plot_anim = True)
 
 plt.show()
 plt.plot(L.sweep_list, L.num_activ_sites)
