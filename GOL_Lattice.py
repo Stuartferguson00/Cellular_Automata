@@ -337,9 +337,10 @@ class GOL_Lattice(object):
             #run dynamics
             self.dynamics()
             if len(self.sweep_list)>3:
-                if self.num_activ_sites[-1] == self.num_activ_sites[-2] and self.num_activ_sites[-1] == self.num_activ_sites[-3] and self.innactive_stop:
-                    print("its done now so stop!!")
-                    return
+                if self.innactive_stop and len(self.num_activ_sites)>10:
+                    if  np.all(np.isclose(self.num_activ_sites[-9:], self.num_activ_sites[-10])):
+                        print("its done now so stop!!")
+                        return
 
     
         

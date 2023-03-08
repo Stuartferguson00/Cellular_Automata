@@ -4,12 +4,13 @@ import matplotlib.pyplot as plt
 import copy
 
 
+
 class SIR_Lattice(object):
     """
     Class for a SIR_Lattice object
     """
 
-    def __init__(self, N, lattice=None):
+    def __init__(self, N, lattice=None, immune = 0. ):
         """
         Initialisation function for Lattice class.
         Parameters
@@ -25,7 +26,7 @@ class SIR_Lattice(object):
         Returns
         -------
         """
-
+        self.immune = immune
         # initialise variables
         self.N = N
 
@@ -48,7 +49,7 @@ class SIR_Lattice(object):
             self.lattice = self.uniform_generate()
 
         elif lattice == "blobby":
-            # assume blob
+            # assume blobF
             self.lattice = self.blobby_generate()
         elif lattice == "wave":
             # assume blob
@@ -70,7 +71,12 @@ class SIR_Lattice(object):
             uiform (NxN) array
         """
         #S, I, R
-        a = np.random.choice((0, 1, 10), size=[self.N, self.N], replace=True, p=[1/3, 1/3, 1/3])
+
+        probs = [1/3, 1/3,  1/3, self.immune]
+        probs = probs / np.sum(probs)
+        print(probs)
+
+        a = np.random.choice((0, 1, 10,100), size=[self.N, self.N], replace=True, p=probs)
         return a
 
     def wave_generate(self):
@@ -103,6 +109,23 @@ class SIR_Lattice(object):
         #S, I, R
         a = np.zeros((self.N, self.N))
         a[15:20,15:20] = 1
+        return a
+
+
+    def absorbing_generate(self):
+
+        """
+        Generates absorbing state, where most points astart as recovered, meaning that the infection will stop spreading soon.
+        ----------
+        Returns
+        -------
+        a : numpy array
+            uiform (NxN) array
+        """
+        #S, I, R
+
+        a = np.random.choice((0, 1, 10), size=[self.N, self.N], replace=True, p=[1/ 10, 1/10, 8/10])
+
         return a
 
 
@@ -180,9 +203,7 @@ class SIR_Lattice(object):
 
 
             if NN_inf:
-
                 if np.random.uniform(0,1)-self.p1<0:
-
                     new_state = 1
                 else:
                     new_state = state
@@ -191,55 +212,26 @@ class SIR_Lattice(object):
 
         elif state == 1:
             #infected
-
-            if np.random.uniform(0,1)-self.p2>0:
+            if np.random.uniform(0,1)-self.p2<0:
                 new_state = 10
             else:
                 new_state = state
         elif state ==10:
             #recovered
 
-            if np.random.uniform(0,1)-self.p3>0:
+            if np.random.uniform(0,1)-self.p3<0:
                 new_state = 0
             else:
                 new_state = state
+        elif state ==100:
+            #immune
+            new_state = state
+
         else:
             print("somethings fucked")
             print(state)
 
         self.lattice[flip_coords[0], flip_coords[1]] = new_state
-
-    def glauber(self):
-
-        """
-        Function to update the lattice with glauber dynamics
-        Parameters
-        ----------
-        Returns
-        -------
-        """
-
-        # randomly choose a point to possibly flip
-        flip_coords = self.rand_flip_coords()
-
-        # find energy corresponding to this point wrt the nearest neighbours
-        E_init = self.compute_E(flip_coords)
-
-        # change in E  if flipped is defined by -2*init_E (proven in my notes)
-        delta_E = -2 * E_init
-
-        # if energy efficient, change
-        if delta_E < 0:
-            # flip point
-            self.lattice[flip_coords[0], flip_coords[1]] = -1 * self.lattice[flip_coords[0], flip_coords[1]]
-
-
-        # if energy innefficient, change with probability related to temperature
-        else:
-
-            p = min(1, np.exp(-self.beta * delta_E))
-            if np.random.uniform(0, 1, 1) <= p:
-                self.lattice[flip_coords[0], flip_coords[1]] = -1 * self.lattice[flip_coords[0], flip_coords[1]]
 
 
 
@@ -277,13 +269,40 @@ class SIR_Lattice(object):
         """
 
         plt.clf()
-        lat = copy.copy(self.lattice)
-        lat[lat == 10] = lat[lat == 10]/5
 
-        im = plt.imshow(lat, animated=True, cmap = "hot")#Oranges")
-        plt.colorbar(im)
+
+        plt.text(-0.1,-1.1, "Susc: black, Inf: orange, Recov: yellow, Immune: white", fontsize=14)#,        verticalalignment='top')
+
+        lat = copy.copy(self.lattice)
+        lat[lat == 10] = 2
+        lat[lat == 100] = 3
+
+
+        im = plt.imshow(lat, animated=True, cmap = "hot", vmin=0, vmax=3,)#Oranges")
+        #plt.colorbar(im)
         plt.draw()
-        plt.pause(0.001)
+        plt.pause(0.1)
+
+
+    def find_frac_inf(self):
+        
+        num_inf = len(self.lattice[self.lattice == 1])
+        frac_inf = num_inf/self.N**2
+        self.frac_inf.append(frac_inf)
+
+        if frac_inf ==0:
+            self.terminate = True
+
+
+    def plot_frac_inf(self,label = None):
+        plt.title("Fraction of sites infected agaist sweeps ")
+        plt.xlabel("Sweeps")
+        plt.ylabel("Immune fraction")
+        plt.plot(self.sweep_list,self.frac_inf,label = label)
+        plt.legend()
+        #plt.show()
+
+
 
     def run(self, probs, wait_sweeps=100, num_tot_sweeps=1000, plot_anim=True):
 
@@ -301,23 +320,40 @@ class SIR_Lattice(object):
          Returns
          -------
          """
-        self.p1,self.p2,self.p3 = probs
+
+        #have to invert the probabilities because I kinda coded it in reverse
+        self.p1 =probs[0]
+        self.p2 =probs[1]
+        self.p3 =probs[2]
+
+        self.frac_inf = []
+        self.terminate = False
+
 
         # loop for required number of sweeps
         for i in range(num_tot_sweeps* self.sweep_size):
             # self.N**2 is the required length of time between visualisations as in the lecture notes
             if i % self.sweep_size == 0:
+
                 # if it is time to take a measurement
-                if i % (self.sweep_size * 1) == 0 and i >= wait_sweeps * self.sweep_size:
+                if i % (self.sweep_size) == 0 and i >= wait_sweeps * self.sweep_size:
 
                     self.sweep_list.append(i / self.sweep_size)
+
+                    self.find_frac_inf()
+
 
                     # plot animation if required
                     if plot_anim:
                         self.plot_lattice()
                 # print every 100 sweeps to check the sim progress
-                if i % (self.sweep_size * 10) == 0:
+                if i % (self.sweep_size * 100) == 0:
                     print(i / self.sweep_size)
+                if self.terminate:
+                    print("breaking")
+                    break
             # run dynamics
             self.dynamics()
+        plt.show()
+        #self.plot_frac_inf()
 
