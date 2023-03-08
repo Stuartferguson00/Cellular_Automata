@@ -129,49 +129,48 @@ class SIR_Lattice(object):
         return a
 
 
-    def SIR_stoopid(self):
+    def find_variance(self, nums = None):
 
-        NN_sum = self.find_sum_NN()
+        if nums is None:
+            nums = np.array(self.num_inf)
 
-        possible_contract_matrix = np.where(NN_sum%10>0, 1, 0)#, np.random.uniform(0,1), 0)
-        rand_matrix = np.random.uniform(0,1,possible_contract_matrix.shape)
-        prob_contract = possible_contract_matrix*rand_matrix
+        var = (np.mean(nums ** 2) - np.mean(nums) ** 2) / self.N ** 2
 
-        # if susc
-        susc = np.where(self.lattice == 0, 1, 0)
+        if self.terminate:
+            #as if an infinite number of samples were taken, it would go to 0 anyway
+            return 0
+        else:
+            return var
 
-        #if recovered
-        recovered = np.where(self.lattice == 10, 1, 0)
+    def jacknife_var(self):
+        """
+        Function to calculate the energy in heat capacity by jacknife method
+        Parameters
+        ----------
 
-        # if infected
-        infected = np.where(self.lattice == 0, 1, 0)
+        Returns
+        -------
 
+        err : float
+            error in heat capacity given by jacknife method
+        """
 
-
-        #if recovered, probability of contraction will becomes negative negative.
-        #If infected, negative aswell (but doesn't matter)
-        #if susc, no change so still uniform between 0 and 1
-
-        prob_contract -= self.lattice
-
-
-        #!!!! INFECT
-        #where probability is still >0 (after checking for immunity and minusing p1), infect
-        contract_matrix = np.where(prob_contract - self.p1 > 0, 1, 0)
-        self.lattice[contract_matrix] = 1
-
-        # !!!! RECOVER
-        self.lattice[infected] = np.where(np.random.uniform(0, 1,self.lattice.shape)-self.p2>0,10,1)[infected]
-
-        # !!!! BECOME SUSC
-        self.lattice[recovered] = np.where(np.random.uniform(0, 1,self.lattice.shape)-self.p3>0,0,10)[recovered]
+        var = self.find_variance()
+        total_nums = self.num_inf
 
 
 
+        sums = 0
+        for i in range(len(total_nums) - 1):
+            mini_nums = np.hstack((total_nums[:i], total_nums[i:-1]))
+            # print(Es)
+            var_i = self.find_variance(nums=mini_nums)
+            sums += (var_i - var) ** 2
+        err = np.sqrt(sums)
+        return err
 
-
-
-
+    def bootleg_var(self):
+        print("do this")
 
     def find_sum_NN(self):
         NN_sum = np.zeros_like(self.lattice)
@@ -284,9 +283,11 @@ class SIR_Lattice(object):
         plt.pause(0.1)
 
 
+
     def find_frac_inf(self):
         
         num_inf = len(self.lattice[self.lattice == 1])
+        self.num_inf.append(num_inf)
         frac_inf = num_inf/self.N**2
         self.frac_inf.append(frac_inf)
 
@@ -327,6 +328,7 @@ class SIR_Lattice(object):
         self.p3 =probs[2]
 
         self.frac_inf = []
+        self.num_inf = []
         self.terminate = False
 
 
@@ -336,10 +338,10 @@ class SIR_Lattice(object):
             if i % self.sweep_size == 0:
 
                 # if it is time to take a measurement
-                if i % (self.sweep_size) == 0 and i >= wait_sweeps * self.sweep_size:
+                if i % (self.sweep_size*10) == 0 and i >= wait_sweeps * self.sweep_size:
+
 
                     self.sweep_list.append(i / self.sweep_size)
-
                     self.find_frac_inf()
 
 
