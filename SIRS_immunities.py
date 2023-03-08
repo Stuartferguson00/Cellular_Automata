@@ -50,12 +50,21 @@ provisional_guess = np.min(orig_immunities[np.argmin(orig_avg_infs)])
 
 #focus in on important region with longer simulation
 acc_wait_sweeps = 100
-acc_num_tot_sweeps = 10000
-acc_immunities = np.linspace(provisional_guess-0.15,provisional_guess+0.15,20)
+acc_num_tot_sweeps = 2000
+num_fracs = 10
+num_repeats = 3
 
+#create test immunity fractions
+acc_immunities = np.linspace(provisional_guess-0.1,provisional_guess+0.1,num_fracs)
+#repeat multiple times
+acc_immunities = np.repeat(acc_immunities, num_repeats)
+
+#run
 acc_avg_infs = find_avg_infs(acc_immunities,acc_wait_sweeps,acc_num_tot_sweeps)
-
-
+acc_avg_infs = np.array(acc_avg_infs)
+#account for the multiple repeats
+acc_avg_infs = np.mean(acc_avg_infs.reshape(num_fracs,num_repeats),axis = 1)
+acc_immunities = np.unique(acc_immunities)
 
 
 out_orig = np.array([orig_avg_infs,orig_immunities])
