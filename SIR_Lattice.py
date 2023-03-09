@@ -323,6 +323,9 @@ class SIR_Lattice(object):
 
 
 
+
+
+
     def run(self, probs, wait_sweeps=100, num_tot_sweeps=1000, plot_anim=True):
 
         """

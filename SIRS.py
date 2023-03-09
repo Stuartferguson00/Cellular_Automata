@@ -56,7 +56,9 @@ if __name__ == "__main__":
     #if incorrect umbe rof arguments are given, state what arguments are expected for which process
     if len(sys.argv) != 8:
         print("Usage: \n N (int),  p1, p2, p3, num_sweeps (int), immune (float), plot_anim (bools)")
-        len(sys.argv)
+        print("For absorbing state: p1 =  0.2, p2 = 0.5, p3 = 0.2, ")
+        print("For dynamic equilibrium: p1 =  0.8, p2 = 0.5, p3 = 0.8, ")
+        print("For waves: p1 =  0.8, p2 = 0.1, p3 = 0.01  (works better with N = 100)")
         print("For further usage instructions, see README or documentation")
         sys.exit(1)
 
