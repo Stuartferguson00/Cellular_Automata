@@ -12,22 +12,27 @@ class SIR_Lattice(object):
 
     def __init__(self, N, lattice=None, immune = 0. ):
         """
-        Initialisation function for Lattice class.
+        Initialisation function for SIR Lattice class.
+
         Parameters
         ----------
+
         N : int
             determines size of square lattce (NxN)
-        T : float
-            Temperature of lattice. Tested between 1K and 3K
 
-        lattice : numpy array or str
-            An option to input starting lattice. Must be of size (NxN).
-            Can also input string with options: "uniform" "ground" "halved" (see functions for specifics)
+
+        lattice : str
+            starting lattice with options: "uniform" or "blobby" (see functions for specifics)
+
+        immune : float
+            fraction of cells to start immune
+
         Returns
         -------
+
         """
+        #initialise variables
         self.immune = immune
-        # initialise variables
         self.N = N
 
 
@@ -51,9 +56,9 @@ class SIR_Lattice(object):
         elif lattice == "blobby":
             # assume blobF
             self.lattice = self.blobby_generate()
-        elif lattice == "wave":
-            # assume blob
-            self.lattice = self.wave_generate()
+        else:
+            print("Must provide appropriate lattice input")
+
 
         self.dynamics = self.SIR
 
@@ -79,32 +84,18 @@ class SIR_Lattice(object):
         a = np.random.choice((0, 1, 10,100), size=[self.N, self.N], replace=True, p=probs)
         return a
 
-    def wave_generate(self):
 
-        """
-        Generates "uniform" lattice, where each point on the lattice has equal probability of being -1 or 1
-        Parameters
-        ----------
-        Returns
-        -------
-        a : numpy array
-            uiform (NxN) array
-        """
-        #S, I, R
-        a = np.zeros((self.N, self.N))
-        a[:,15] = 1
-        return a
 
     def blobby_generate(self):
 
         """
-        Generates "uniform" lattice, where each point on the lattice has equal probability of being -1 or 1
+        Generates "blobby" lattice, where one area of the lattice begins infected
         Parameters
         ----------
         Returns
         -------
         a : numpy array
-            uiform (NxN) array
+            blob (NxN) array
         """
         #S, I, R
         a = np.zeros((self.N, self.N))
@@ -112,24 +103,24 @@ class SIR_Lattice(object):
         return a
 
 
-    def absorbing_generate(self):
-
-        """
-        Generates absorbing state, where most points astart as recovered, meaning that the infection will stop spreading soon.
-        ----------
-        Returns
-        -------
-        a : numpy array
-            uiform (NxN) array
-        """
-        #S, I, R
-
-        a = np.random.choice((0, 1, 10), size=[self.N, self.N], replace=True, p=[1/ 10, 1/10, 8/10])
-
-        return a
 
 
     def find_variance(self, nums = None):
+
+        """
+        Function to calculate the variance
+        Parameters
+        ----------
+
+        nums: optional array
+            number or infected accross many sample sweep
+
+        Returns
+        -------
+
+        err : float
+            error in variance given by jacknife method
+        """
 
         if nums is None:
             nums = np.array(self.num_inf)
@@ -144,7 +135,7 @@ class SIR_Lattice(object):
 
     def jacknife_var(self):
         """
-        Function to calculate the energy in heat capacity by jacknife method
+        Function to calculate the error in variance by jacknife method
         Parameters
         ----------
 
@@ -152,7 +143,7 @@ class SIR_Lattice(object):
         -------
 
         err : float
-            error in heat capacity given by jacknife method
+            error in variance given by jacknife method
         """
 
         var = self.find_variance()
@@ -169,10 +160,21 @@ class SIR_Lattice(object):
         err = np.sqrt(sums)
         return err
 
-    def bootleg_var(self):
-        print("do this")
+
 
     def find_sum_NN(self):
+
+        """
+        Finds how many nearest neightbours for the entire lattice
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        #initialises 0 array, then counts NN by rolling
         NN_sum = np.zeros_like(self.lattice)
 
         NN_sum += np.roll(self.lattice, 1, axis=0)
@@ -182,7 +184,19 @@ class SIR_Lattice(object):
 
         return NN_sum
 
+
     def SIR(self):
+
+        """
+        Function to do update step for SIRS
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
         # randomly choose a point to assess
         flip_coords = self.rand_flip_coords()
 
@@ -258,7 +272,6 @@ class SIR_Lattice(object):
 
         """
         Function to plot the lattice
-        This function uses pyplot not gnuplot or other.
         It does not write to file to simplify the procedure.
         It plots directly from self.lattice.
         Parameters
@@ -285,6 +298,17 @@ class SIR_Lattice(object):
 
 
     def find_frac_inf(self):
+
+        """
+        Finds the fraction of lattice that are infected
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
         
         num_inf = len(self.lattice[self.lattice == 1])
         self.num_inf.append(num_inf)
@@ -295,23 +319,19 @@ class SIR_Lattice(object):
             self.terminate = True
 
 
-    def plot_frac_inf(self,label = None):
-        plt.title("Fraction of sites infected agaist sweeps ")
-        plt.xlabel("Sweeps")
-        plt.ylabel("Immune fraction")
-        plt.plot(self.sweep_list,self.frac_inf,label = label)
-        plt.legend()
-        #plt.show()
+
 
 
 
     def run(self, probs, wait_sweeps=100, num_tot_sweeps=1000, plot_anim=True):
 
         """
-         Function to run full dynamics given simulation inputs.
+         Function to run full SIRS given simulation inputs.
          It uses the specified dynamics of the system and simply loops through when required.
          Parameters
          ----------
+         probs: arraylike
+            [p1,p2,p3], the probabilities of S --> I, I-->R AND R --> S
          wait_sweeps : int
              number of sweeps to wait before starting measurements
         num_total_sweeps : int

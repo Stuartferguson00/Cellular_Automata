@@ -5,7 +5,7 @@ from SIR_Lattice import SIR_Lattice
 import time
 import numpy as np
 
-def main()
+def main():
 
 
     """
