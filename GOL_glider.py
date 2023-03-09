@@ -8,13 +8,14 @@ import sys
 def main(plot_anim):
 
     """
-    Function to run a GOL glider, and lot it's displacement from the origin
+    Function to run SIRS simmulations over a range of immunity levels for given input probabilities in order to find
+    the minimum immunity fraction required to dismiss the disease
 
 
     Parameters
     ----------
-    plot_anim: bool
-        whether or not to plot animation of GOL
+    probs: tupple
+        (p1,p2,p3) the probabilities of S --> I, I-->R AND R --> S
 
     Returns
     -------
