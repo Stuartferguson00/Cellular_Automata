@@ -264,7 +264,7 @@ class GOL_Lattice(object):
                     else:
                         #if boundary condition
                         return None
-        r_cm = np.sum(pos_list)/self.N**2
+        r_cm = np.sum(pos_list)/len(pos_list)
         return r_cm
     
 
@@ -333,7 +333,7 @@ class GOL_Lattice(object):
             #print every 100 sweeps to check the sim progress
             if i%100 == 0:
                 pass
-                #print(i)
+                print(i)
             #run dynamics
             self.dynamics()
             if len(self.sweep_list)>3:
