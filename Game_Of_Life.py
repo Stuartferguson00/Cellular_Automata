@@ -1,52 +1,63 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 from GOL_Lattice import GOL_Lattice
 
 
 
-"""
-#L = GOL_Lattice(50, lattice = "blinker")
-L = GOL_Lattice(50, lattice = "glider")
-#L = GOL_Lattice(50)
-
-L.run(wait_sweeps = 0, num_tot_sweeps = 10000, plot_anim = True)
-
-plt.show()
-plt.plot(L.sweep_list, L.num_activ_sites)
-plt.show()
-
-"""
-
-"""
-#print(L.glider_pos)
-#print(L.sweep_list)
-#plt.plot#(L.sweep_list, L.glider_pos)
-#plt.show()
+def main(N, init_lattice, num_sweeps, plot_anim):
 
 
-end_points = []
-for i in range(1000):
-    L = GOL_Lattice(50)
-    L.run(wait_sweeps=0, num_tot_sweeps=5000, plot_anim=False)
-    end_points.append(L.sweep_list[-1])
-    #plt.plot(L.sweep_list, L.num_activ_sites)
-    #plt.show()
-    if i%10 == 0:
-        print(i)
+    """
+    Function to run a basic Game Of Life
 
-print(end_points)
-#plt.show()
 
-#np.savetxt("GOL_hist_data.txt",end_points,delimiter = ",")
+    Parameters
+    ----------
+    N: int
+        Size of lattice. Assumes square NxN lattice.
 
-counts, bins = np.histogram(end_points)
-plt.stairs(counts, bins)
-plt.show()
+    init_lattice : numpy array or str
+        An option to input starting lattice. Must be of size (NxN).
+        Can also input string with options: "uniform" "blinker" "glider" (see functions for specifics)
 
-#
-"""
+    num_sweeps: int
+        total number of sweeps required in the simulation.
+
+    plot_anim: bool
+        whether or not to plot animation of GOL
+
+    Returns
+    -------
+
+
+    """
+
+    #initialise and run lattice
+    L = GOL_Lattice(N, lattice = init_lattice)
+    L.run(wait_sweeps = 0, num_tot_sweeps = num_sweeps, plot_anim = plot_anim)
+
+
+
+
+if __name__ == "__main__":
+
+    #if incorrect umbe rof arguments are given, state what arguments are expected for which process
+    if len(sys.argv) != 5:
+        print("Usage: \n N (int), init_lattice (str 'uniform' or other), num_sweeps (int), plot_anim (bools)")
+        len(sys.argv)
+        print("For further usage instructions, see README or documentation")
+        sys.exit(1)
+
+    #if only one Temperature is to be evaluated
+    elif len(sys.argv) == 5:
+        main(int(sys.argv[1]), str(sys.argv[2]), int(sys.argv[3]), eval(sys.argv[4]))
+
+
+
+
 
 
 

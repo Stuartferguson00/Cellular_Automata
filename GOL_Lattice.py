@@ -23,14 +23,13 @@ class GOL_Lattice(object):
 
         N : int
             determines size of square lattce (NxN)
-        T : float
-            Temperature of lattice. Tested between 1K and 3K
+
         dynamics : str
-            Dynamics to use within the simulation, options are "Glauber" or "Kawasaki"
+            Dynamics to use within the simulation, options are "GOL"
 
         lattice : numpy array or str
             An option to input starting lattice. Must be of size (NxN).
-            Can also input string with options: "uniform" "ground" "halved" (see functions for specifics)
+            Can also input string with options: "uniform" "blinker" "glider" (see functions for specifics)
 
         Returns
         -------
@@ -47,12 +46,15 @@ class GOL_Lattice(object):
         #N**2 is the required length of time between visualisations as in the lecture notes
         #self.sweep_size = self.N**2
 
-
+        #this isnt necessary anymore, but no harm
         if dynamics == "GOL":
             self.dynamics = self.game_of_life
         else:
             print("here becaus eyou havent done this yet")
 
+
+        #set innactive stop (for if the sim should stop if innactive)
+        #set lattice
         self.glider_meas = False
         if type(lattice) == np.ndarray:#'numpy.ndarray':
             if lattice.shape == (N,N):
@@ -62,10 +64,10 @@ class GOL_Lattice(object):
             else:
                 print("input lattice must be correct shape!!")
         elif lattice is None:
+            #assume uniform
             self.innactive_stop = True
             self.lattice = self.uniform_generate()
         elif lattice == "uniform":
-            #assume uniform
             self.innactive_stop = True
             self.lattice = self.uniform_generate()
         elif lattice == "glider":
@@ -75,16 +77,28 @@ class GOL_Lattice(object):
         elif lattice == "blinker":
             self.innactive_stop = False
             self.lattice = self.blinker_generate()
-
         else:
             print("your lattice input is wrong")
-        #print(self.lattice)
 
+        #vectorise update function
         self.vec_update_point_gol = np.vectorize(self.update_point_gol)
 
 
 
     def blinker_generate(self):
+
+        """
+        Generates "blinker" lattice, where the lattice has been layed out speciffically to show one blinker
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+
+
         blinker_lattice = np.zeros((self.N,self.N))
         if self.N<3:
             print("lattice is too small")
@@ -94,6 +108,19 @@ class GOL_Lattice(object):
         return blinker_lattice
 
     def glider_generate(self):
+
+        """
+        Generates "blinker" lattice, where the lattice has been layed out specifically to show one glider,
+        starting at the origin and moving diagonally
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+
         glider_lattice = np.zeros((self.N, self.N))
         if self.N < 3:
             print("lattice is too small")
@@ -105,66 +132,68 @@ class GOL_Lattice(object):
         return glider_lattice
 
     def game_of_life(self):
-        #assumes dead = 0 and alive = 1
-        #self.lattice[flip_coords[0], flip_coords[1]] = -1 * self.lattice[flip_coords[0], flip_coords[1]]
-        #print("Hmm")
-        #print(self.lattice)
-        NN_sum = self.find_sum_NN()
-        new_lattice  = self.update_gol(NN_sum)
-        #print(new_lattice)
+        """
+        GOL dynamics function
 
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+
+        #assumes dead = 0 and alive = 1
+        #sums nearest enighbours of each point
+        NN_sum = self.find_sum_NN()
+
+        #updates according to NN
+        new_lattice  = self.update_gol(NN_sum)
+
+        #finds numbe rof active sites (for possible termination)
         self.num_activ_sites.append(self.N**2-np.sum(np.isclose(self.lattice,new_lattice)))
 
+        #update lattice
         self.lattice = new_lattice
-        #print(self.lattice)
+
 
     def update_gol(self, NN_sum):
-        #next_step = np.zeros_like(self.lattice)
-        #for i in range(self.N):
-        #    for j in range(self.N):
-        #        next_step[i,j] = self.update_point_gol(self.lattice[i,j], NN_sum[i,j])
 
-        #next_step = self.update_point_gol(self.lattice, NN_sum)
+        """
+        updates according to GOL rules
+
+        Parameters
+        ----------
+        NN_sum : array
+            lattice of NN neighbour sums
+        Returns
+        -------
+
+        """
+
         next_step = self.vec_update_point_gol(self.lattice, NN_sum)
 
         return next_step
 
-    """
+
+
     def update_point_gol(self, bef, sums):
-        #remember to vectorize this
 
-        if bef == 0:
-            #cell is dead
-            if sums == 3:
-                #becomes alive
-                aft = 1
-            else:
-                #stays dead
-                aft = 0
-        elif bef ==1:
-            if sums <2:
 
-                #dies
-                aft = 0
-            elif sums >3:
-                #dies
-                aft = 0
-            elif sums ==2 or sums == 3:
-                #stays alive
-                aft = 1
-            else:
-                print("you have fucked something else up")
-        else:
-            print("you have fucked something up")
-        return aft
+        """
+        lays out update rules will be vectorized
+
+        Parameters
+        ----------
+        bef: int
+            alive or dead (binary)
+        sum: int
+            numbe rof NN
+        Returns
+        -------
+
         """
 
-
-
-
-
-    def update_point_gol(self, bef, sums):
-        #remember to vectorize this
 
         if bef == 0:
             #cell is dead
@@ -193,8 +222,23 @@ class GOL_Lattice(object):
 
     def find_sum_NN(self):
 
+
+        """
+        finds how many nearest neightbours for the entire lattice
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+
+        #zero array
         NN_sum = np.zeros_like(self.lattice)
 
+
+        #use rolls to find NN sums
         NN_sum += np.roll(self.lattice, 1, axis=0)
         NN_sum += np.roll(self.lattice, -1, axis=0)
         NN_sum += np.roll(self.lattice, 1, axis=1)
@@ -227,7 +271,7 @@ class GOL_Lattice(object):
         Returns
         -------
         a : numpy array
-            uiform (NxN) array
+            uniform (NxN) array
         """
         a = np.random.choice((1,0), size=[self.N,self.N], replace=True, p=[0.5,0.5])
         return a
@@ -236,7 +280,7 @@ class GOL_Lattice(object):
 
         """
         Generates "ground" lattice, where every point on the lattice is set to 1,
-        approximating the ground state for Grauber dynamics.
+        not used, or properly coded at th moment
 
         Parameters
         ----------
@@ -254,7 +298,7 @@ class GOL_Lattice(object):
         return a
 
     def find_glider_pos(self):
-        #this is extremely bad codi
+        #this is extremely bad coding
         pos_list = []
         for i in range(self.N):
             for j in range(self.N):
@@ -297,7 +341,7 @@ class GOL_Lattice(object):
     def run(self,wait_sweeps = 100, num_tot_sweeps = 1000, plot_anim = True):
 
         """
-
+        Function to run GOL simulation
 
          Parameters
          ----------

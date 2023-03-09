@@ -3,28 +3,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from GOL_Lattice import GOL_Lattice
+import sys
+
+def main(plot_anim):
+
+    """
+    Function to run a GOL glider, and lot it's displacement from the origin
 
 
+    Parameters
+    ----------
+    plot_anim: bool
+        whether or not to plot animation of GOL
 
-#L = GOL_Lattice(50, lattice = "blinker")
-L = GOL_Lattice(50, lattice = "glider")
-#L = GOL_Lattice(50)
+    Returns
+    -------
 
-L.run(wait_sweeps = 0, num_tot_sweeps = 100, plot_anim = True)
 
-plt.show()
-plt.title("Glider distance from origin with sweeps")
-plt.ylabel("Position of glider center of mass")
-plt.xlabel("Sweep")
-plt.plot(L.sweep_list, L.glider_pos)
+    """
 
-time = 10 #sweeps
-pos = np.array(L.glider_pos)
-distance = pos[7+time]-pos[7]
-velocity = distance/time
 
-print("The velocity of the glider")
-print(velocity)
-#print(np.sqrt((50**2)+(50**2))/200)
-print("please note that this is equivalent to: "+str(velocity/np.sqrt(2))+" if considering one diagonal step to be equal in distance to one step")
-plt.show()
+    L = GOL_Lattice(50, lattice = "glider")
+    L.run(wait_sweeps = 0, num_tot_sweeps = 400, plot_anim = plot_anim)
+
+    plt.show()
+    plt.title("Glider distance from origin with sweeps")
+    plt.ylabel("Displacement from origin of glider center of mass")
+    plt.xlabel("Sweep")
+    plt.plot(L.sweep_list, L.glider_pos)
+
+    time = 50 #sweeps
+    pos = np.array(L.glider_pos)
+    distance = pos[7+time]-pos[7]
+    velocity = distance/time
+
+    print("The velocity of the glider is: "+str(velocity))
+    print("please note that this is equivalent to: "+str(velocity/np.sqrt(2))+" if considering one diagonal step to be equal in distance to one step")
+    plt.show()
+
+
+if __name__ == "__main__":
+
+
+    #if incorrect umbe rof arguments are given, state what arguments are expected for which process
+    if len(sys.argv) != 2:
+        print("Usage: \n  plot_anim (bools)")
+        len(sys.argv)
+        print("For further usage instructions, see README or documentation")
+        sys.exit(1)
+
+    #if only one Temperature is to be evaluated
+    elif len(sys.argv) == 2:
+        main(eval(sys.argv[1]))
+
